@@ -146,6 +146,7 @@
                 const player = doc.data();
                 playerCount++;
                 budgetUsed += player.currentPrice;
+		     console.log("budgetused", budgetUsed);
                 if (player.rtm) rtmUsed++;
                 if (player.nationality !== "Indian") overseasCount++;
                 playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
