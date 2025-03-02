@@ -196,8 +196,8 @@ async function assignPlayer() {
     }
 
     // Check overseas player limit
-    const overseasCount = players.filter(player => player.team === selectedTeam && player.nationality !== "India").length;
-    if (selectedPlayer.nationality !== "India" && overseasCount >= 8) {
+    const overseasCount = players.filter(player => player.team === selectedTeam && player.nationality !== "Indian").length;
+    if (selectedPlayer.nationality !== "Indian" && overseasCount >= 8) {
         alert("Overseas player limit reached for this team.");
         return;
     }
