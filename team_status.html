@@ -133,34 +133,37 @@
             });
         }
 
-        async function loadTeamData() {
-            const team = document.getElementById("teamSelect").value;
-            if (!team) return;
+       async function loadTeamData() {
+    const team = document.getElementById("teamSelect").value;
+    if (!team) return;
 
-            const playersSnapshot = await getDocs(query(collection(db, "players"), where("team", "==", team)));
+    const playersSnapshot = await getDocs(query(collection(db, "players"), where("team", "==", team)));
 
-            let playerCount = 0, budgetUsed = 0, rtmUsed = 0, overseasCount = 0;
-            let playerRows = "";
+    let playerCount = 0, budgetUsed = 0, rtmUsed = 0, overseasCount = 0;
+    let playerRows = "";
 
-            playersSnapshot.forEach(doc => {
-                const player = doc.data();
-                playerCount++;
-                budgetUsed += player.currentPrice;
-		     console.log("budgetused", budgetUsed);
-                if (player.rtm) rtmUsed++;
-                if (player.nationality !== "Indian") overseasCount++;
-                playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
-            });
+    playersSnapshot.forEach(doc => {
+        const player = doc.data();
+        playerCount++;
+        let playerPrice = Number(player.currentPrice) || 0; // Ensure valid number
+        budgetUsed += playerPrice;
+        if (player.rtm) rtmUsed++;
+        if (player.nationality !== "Indian") overseasCount++;
 
-            document.getElementById("teamStats").innerHTML = `
-                <td>${playerCount}</td>
-                <td>${120 - budgetUsed}</td>
-                <td>${6 - rtmUsed}</td>
-                <td>${overseasCount}</td>
-            `;
-            document.getElementById("playerList").innerHTML = playerRows;
-        }
+        playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
+    });
 
+    let totalBudget = 120; // Fetch dynamically if needed
+    let budgetLeft = totalBudget - budgetUsed;
+    
+    document.getElementById("teamStats").innerHTML = `
+        <td>${playerCount}</td>
+        <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft}</td>
+        <td>${Math.max(6 - rtmUsed, 0)}</td>
+        <td>${overseasCount}</td>
+    `;
+    document.getElementById("playerList").innerHTML = playerRows;
+}
         // Attach functions to window to make them accessible globally
         window.loadTeamData = loadTeamData;
 
