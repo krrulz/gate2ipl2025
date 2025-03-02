@@ -162,7 +162,7 @@ async function loadTeamData() {
     document.getElementById("teamStats").innerHTML = `
         <td>${playerCount}</td>
         <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft.toFixed(2)}</td>
-        <td>{rtmLeft}</td>
+        <td>${rtmLeft}</td>
         <td>${overseasCount}</td>
     `;
     document.getElementById("playerList").innerHTML = playerRows;
