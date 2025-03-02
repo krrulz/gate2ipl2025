@@ -149,7 +149,7 @@ async function loadTeamData() {
         let playerPrice = parseFloat(player.currentPrice) || 0; // Convert string to number safely
         budgetUsed += playerPrice;
 
-        if (player.rtm === "TRUE") rtmUsed++; // If rtm is stored as a string ("true"/"false")
+        if (player.rtm == "TRUE") rtmUsed++; // If rtm is stored as a string ("true"/"false")
         if (player.nationality !== "Indian") overseasCount++;
 
         playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
