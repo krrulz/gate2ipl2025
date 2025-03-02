@@ -157,12 +157,12 @@ async function loadTeamData() {
 
     let totalBudget = 120; // Ensure this matches your actual budget constraints
     let budgetLeft = totalBudget - budgetUsed;
-
+	let rtmLeft= 6 - rtmUsed;
     // Prevent negative values
     document.getElementById("teamStats").innerHTML = `
         <td>${playerCount}</td>
         <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft.toFixed(2)}</td>
-        <td>${6 - rtmUsed}</td>
+        <td>{rtmLeft}</td>
         <td>${overseasCount}</td>
     `;
     document.getElementById("playerList").innerHTML = playerRows;
