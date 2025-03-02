@@ -133,7 +133,7 @@
             });
         }
 
-       async function loadTeamData() {
+async function loadTeamData() {
     const team = document.getElementById("teamSelect").value;
     if (!team) return;
 
@@ -145,20 +145,23 @@
     playersSnapshot.forEach(doc => {
         const player = doc.data();
         playerCount++;
-        let playerPrice = Number(player.currentPrice) || 0; // Ensure valid number
+
+        let playerPrice = parseFloat(player.currentPrice) || 0; // Convert string to number safely
         budgetUsed += playerPrice;
-        if (player.rtm) rtmUsed++;
+
+        if (player.rtm === "true") rtmUsed++; // If rtm is stored as a string ("true"/"false")
         if (player.nationality !== "Indian") overseasCount++;
 
         playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
     });
 
-    let totalBudget = 120; // Fetch dynamically if needed
+    let totalBudget = 120; // Ensure this matches your actual budget constraints
     let budgetLeft = totalBudget - budgetUsed;
-    
+
+    // Prevent negative values
     document.getElementById("teamStats").innerHTML = `
         <td>${playerCount}</td>
-        <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft}</td>
+        <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft.toFixed(2)}</td>
         <td>${Math.max(6 - rtmUsed, 0)}</td>
         <td>${overseasCount}</td>
     `;
