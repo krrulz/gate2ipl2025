@@ -87,16 +87,16 @@
     <div class="container">
         <div class="left-pane">
           <table>
-               <br> <tr><th>Number of Players</th><th>Budget Left</th><th>RTM Left</th><th>Overseas Count</th></tr></br>
+               <tr><th>Number of Players</th><th>Budget Left</th><th>RTM Left</th><th>Overseas Count</th></tr>
                 <tr id="teamStats"></tr>
             </table>     
         </div>
         <div class="right-pane">
-		         <select id="teamSelect" onchange="loadTeamData()">
+            <select id="teamSelect" onchange="loadTeamData()">
                 <option value="">Select a Team</option>
             </select>
-                        <table>
-                <tr><tr><tr><th>Player Name</th><th>Current Price</th></tr></tr></tr>
+            <table>
+                <tr><th>Player Name</th><th>Current Price</th></tr>
                 <tbody id="playerList"></tbody>
             </table>
         </div>
@@ -133,40 +133,41 @@
             });
         }
 
-async function loadTeamData() {
-    const team = document.getElementById("teamSelect").value;
-    if (!team) return;
+        async function loadTeamData() {
+            const team = document.getElementById("teamSelect").value;
+            if (!team) return;
 
-    const playersSnapshot = await getDocs(query(collection(db, "players"), where("team", "==", team)));
+            const playersSnapshot = await getDocs(query(collection(db, "players"), where("team", "==", team)));
 
-    let playerCount = 0, budgetUsed = 0, rtmUsed = 0, overseasCount = 0;
-    let playerRows = "";
+            let playerCount = 0, budgetUsed = 0, rtmUsed = 0, overseasCount = 0;
+            let playerRows = "";
 
-    playersSnapshot.forEach(doc => {
-        const player = doc.data();
-        playerCount++;
+            playersSnapshot.forEach(doc => {
+                const player = doc.data();
+                playerCount++;
 
-        let playerPrice = parseFloat(player.currentPrice) || 0; // Convert string to number safely
-        budgetUsed += playerPrice;
+                let playerPrice = parseFloat(player.currentPrice) || 0; // Convert safely
+                budgetUsed += playerPrice;
 
-        if (player.rtm == "TRUE") rtmUsed++; // If rtm is stored as a string ("true"/"false")
-        if (player.nationality !== "Indian") overseasCount++;
+                if (player.rtm.toUpperCase() === "TRUE") rtmUsed++; // Case-insensitive check
+                if (player.nationality !== "Indian") overseasCount++;
 
-        playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
-    });
+                playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
+            });
 
-    let totalBudget = 120; // Ensure this matches your actual budget constraints
-    let budgetLeft = totalBudget - budgetUsed;
-	let rtmLeft= 6 - rtmUsed;
-    // Prevent negative values
-    document.getElementById("teamStats").innerHTML = `
-        <td>${playerCount}</td>
-        <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft.toFixed(2)}</td>
-        <td>${rtmLeft}</td>
-        <td>${overseasCount}</td>
-    `;
-    document.getElementById("playerList").innerHTML = playerRows;
-}
+            let totalBudget = 120;
+            let budgetLeft = totalBudget - budgetUsed;
+            let rtmLeft = 6 - rtmUsed;
+
+            document.getElementById("teamStats").innerHTML = `
+                <td>${playerCount}</td>
+                <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft.toFixed(2)}</td>
+                <td>${rtmLeft}</td>
+                <td>${overseasCount}</td>
+            `;
+            document.getElementById("playerList").innerHTML = playerRows;
+        }
+
         // Attach functions to window to make them accessible globally
         window.loadTeamData = loadTeamData;
 
@@ -174,4 +175,3 @@ async function loadTeamData() {
     </script>
 </body>
 </html>
- 
