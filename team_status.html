@@ -118,10 +118,11 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
+        const collectionName = sessionStorage.getItem("collection") || "defaultCollection";
+        console.log("Using collection:", collectionName);
         async function loadTeams() {
             const teams = new Set();
-            const playersSnapshot = await getDocs(collection(db, "players"));
+            const playersSnapshot = await getDocs(collection(db, collectionName));
             playersSnapshot.forEach(doc => teams.add(doc.data().team));
 
             const teamSelect = document.getElementById("teamSelect");
@@ -137,7 +138,7 @@
             const team = document.getElementById("teamSelect").value;
             if (!team) return;
 
-            const playersSnapshot = await getDocs(query(collection(db, "players"), where("team", "==", team)));
+            const playersSnapshot = await getDocs(query(collection(db, collectionName), where("team", "==", team)));
 
             let playerCount = 0, budgetUsed = 0, rtmUsed = 0, overseasCount = 0;
             let playerRows = "";
