@@ -163,7 +163,7 @@
 
         if (!querySnapshot.empty) {
             let userDoc = querySnapshot.docs[0].data(); // Get user data
-            const collectionName = userDoc.data().collectionName;
+            const collectionName = userDoc.collectionName;
 			let auctype = userDoc.auctype; // Get auctype value
 
             if (userDoc.password === password) {
