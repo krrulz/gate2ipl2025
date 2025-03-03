@@ -152,29 +152,54 @@
             const db = firebase.firestore();
 
             // Attach event listener after initialization
-            document.getElementById("loginButton").addEventListener("click", async () => {
-                const username = document.getElementById("username").value;
-                const password = document.getElementById("password").value;
+       document.getElementById("loginButton").addEventListener("click", async () => {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-                try {
-                    const querySnapshot = await db.collection("users")
-                        .where("username", "==", username)
-                        .where("password", "==", password)
-                        .get();
-                    
-                    if (!querySnapshot.empty) {
-                        const userDoc = querySnapshot.docs[0];
-                        const collectionName = userDoc.data().collectionName; // Retrieve collection name
-                        alert("Login successful!");
+    try {
+        const querySnapshot = await db.collection("users")
+            .where("username", "==", username)
+            .get();
+
+        if (!querySnapshot.empty) {
+            let userDoc = querySnapshot.docs[0].data(); // Get user data
+            const collectionName = userDoc.data().collectionName;
+			let auctype = userDoc.auctype; // Get auctype value
+
+            if (userDoc.password === password) {
+                // Redirect based on auctype value
+                if (auctype === 1) {
+                    alert("Login successful!");
                         sessionStorage.setItem("collection", collectionName);
-                        window.location.href = `dashboard.html`;
-                    } else {
-                        alert("Invalid username or password");
-                    }
-                } catch (error) {
-                    console.error("Error logging in:", error);
+					window.location.href = "dashboard.html";
+                } else if (auctype === 2) {
+                    alert("Login successful!");
+                        sessionStorage.setItem("collection", collectionName);
+					window.location.href = "dashboard2.html";
                 }
-            });
+            } else if (userDoc.viewpassword === password) {
+                // Redirect based on auctype value
+                if (auctype === 1) {
+                    alert("Login successful!");
+                        sessionStorage.setItem("collection", collectionName);
+					window.location.href = "team_status.html";
+                } else if (auctype === 2) {
+                    alert("Login successful!");
+                        sessionStorage.setItem("collection", collectionName);
+					window.location.href = "team_status2.html";
+                }
+            } else {
+                alert("Invalid username or password.");
+            }
+        } else {
+            alert("Invalid username or password.");
+        }
+    } catch (error) {
+        console.error("Error logging in:", error);
+        alert("An error occurred while logging in. Please try again.");
+    }
+});
+
         });
     </script>
 </body>
