@@ -234,10 +234,7 @@ async function assignPlayer() {
         alert(`${playerName} has been assigned to ${selectedTeam} (RTM: ${rtmYes ? "Yes" : "No"}) at a price of ₹${currentBid.toFixed(2)}. Firestore is updated.`);
 
         // **Clear the currentPrice textbox**
-        const currentPriceTextbox = document.getElementById("player-currentPrice-input");
-        if (currentPriceTextbox) {
-            currentPriceTextbox.value = "";  // Clear the value of the currentPrice textbox
-        }
+	document.getElementById("player-currentPrice-input").value = ""; 
         
     } catch (error) {
         console.error("Error updating Firestore:", error);
