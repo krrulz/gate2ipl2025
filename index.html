@@ -162,11 +162,11 @@
             .get();
 
         if (!querySnapshot.empty) {
-            let userDoc = querySnapshot.docs[0].data(); // Get user data
-            const collectionName = userDoc.collectionName;
-			let auctype = userDoc.auctype; // Get auctype value
+            let userDoc = querySnapshot.docs[0]; // Get user data
+            const collectionName = userDoc.data().collectionName;
+			let auctype = userDoc.data().auctype; // Get auctype value
 
-            if (userDoc.password === password) {
+            if (userDoc.data().password === password) {
                 // Redirect based on auctype value
                 if (auctype === 1) {
                     alert("Login successful!");
@@ -177,7 +177,7 @@
                         sessionStorage.setItem("collection", collectionName);
 					window.location.href = "dashboard2.html";
                 }
-            } else if (userDoc.viewpassword === password) {
+            } else if (userDoc.data().viewpassword === password) {
                 // Redirect based on auctype value
                 if (auctype === 1) {
                     alert("Login successful!");
