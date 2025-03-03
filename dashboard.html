@@ -170,7 +170,7 @@ async function assignPlayer() {
     const playerName = document.getElementById("player-name-input").value;
     const teamSelect = document.getElementById("team-select");
     const selectedTeam = teamSelect.value;
-    const rtmYes = document.getElementById("rtm-yes").checked;
+    const rtmYes = document.getElementById("rtm-yes").checked ? "true" : "false";
     const currentBidInput = document.getElementById("player-currentPrice-input");
     const currentBid = parseFloat(currentBidInput.value);
 
