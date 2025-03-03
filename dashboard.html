@@ -51,7 +51,7 @@
                         currentIPLTeam: data.currentIPLTeam || "",
                         nationality: data.nationality || "Unknown",
                         team: data.team || "",
-                       rtm: data.rtm === true || data.rtm === "true" ? "true" : "false", 
+                       rtm: data.rtm === true || data.rtm === "true" || data.rtm === "TRUE" ? "TRUE" : "FALSE", 
                         currentPrice: data.basePrice || 0 // Using basePrice as the initial currentPrice
                     };
                 });
@@ -283,7 +283,7 @@ document.getElementById("team-status-button").addEventListener("click", function
                 currentIPLTeam: data.currentIPLTeam || "",
                 nationality: data.nationality || "Unknown",
                 team: data.team || "",
-                rtm: data.rtm === true || data.rtm === "true" ? "true" : "false", 
+                rtm: data.rtm === true || data.rtm === "true"|| data.rtm === "TRUE" ? "TRUE" : "FALSE", 
                 currentPrice: data.currentPrice ? parseFloat(data.currentPrice) : parseFloat(data.basePrice) // Correctly fetch currentPrice
             };
         });
