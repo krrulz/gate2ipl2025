@@ -152,7 +152,7 @@
             const db = firebase.firestore();
 
             // Attach event listener after initialization
-       document.getElementById("loginButton").addEventListener("click", async () => {
+   document.getElementById("loginButton").addEventListener("click", async () => {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
@@ -164,29 +164,32 @@
         if (!querySnapshot.empty) {
             let userDoc = querySnapshot.docs[0]; // Get user data
             const collectionName = userDoc.data().collectionName;
-			let auctype = userDoc.data().auctype; // Get auctype value
+            let auctype = userDoc.data().auctype; // Get auction type (1 or 2)
+            const correctPassword = userDoc.data().password;
+            const viewPassword = userDoc.data().viewpassword;
 
-            if (userDoc.data().password === password) {
-                // Redirect based on auctype value
-                if (auctype === 1) {
-                    alert("Login successful!");
-                        sessionStorage.setItem("collection", collectionName);
-					window.location.href = "dashboard.html";
-                } else if (auctype === 2) {
-                    alert("Login successful!");
-                        sessionStorage.setItem("collection", collectionName);
-					window.location.href = "dashboard2.html";
+            // Check if teams exist in Firestore
+            const teamsSnapshot = await db.collection(collectionName).doc("teams").collection(collectionName).get();
+			console.log("Using collection:", collectionName);
+            const teamsExist = !teamsSnapshot.empty;
+			console.log("Teams Exist", teamsExist);
+            sessionStorage.setItem("collection", collectionName);
+
+            if (password === correctPassword) {
+                if (teamsExist) {
+                    // Auction login - Redirect based on auctype
+                    window.location.href = auctype === 1 ? "dashboard.html" : "dashboard2.html";
+                } else {
+                    // Teams not set up, go to setup page
+                    window.location.href = `setup.html?collection=${collectionName}`;
                 }
-            } else if (userDoc.data().viewpassword === password) {
-                // Redirect based on auctype value
-                if (auctype === 1) {
-                    alert("Login successful!");
-                        sessionStorage.setItem("collection", collectionName);
-					window.location.href = "team_status.html";
-                } else if (auctype === 2) {
-                    alert("Login successful!");
-                        sessionStorage.setItem("collection", collectionName);
-					window.location.href = "team_status2.html";
+            } else if (password === viewPassword) {
+                if (teamsExist) {
+                    // View-only login - Redirect based on auctype
+                    window.location.href = auctype === 1 ? "team_status.html" : "team_status2.html";
+                } else {
+                    // Teams missing, show "not finalized" page
+                    window.location.href = "teams_not_finalized.html";
                 }
             } else {
                 alert("Invalid username or password.");
@@ -199,6 +202,7 @@
         alert("An error occurred while logging in. Please try again.");
     }
 });
+
 
         });
     </script>
