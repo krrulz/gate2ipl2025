@@ -164,7 +164,9 @@
         if (!querySnapshot.empty) {
             let userDoc = querySnapshot.docs[0]; // Get user data
             const collectionName = userDoc.data().collectionName;
+		console.log("Using collection:", collectionName);
             let auctype = userDoc.data().auctype; // Get auction type (1 or 2)
+		console.log("Auction type:", auctype);
             const correctPassword = userDoc.data().password;
             const viewPassword = userDoc.data().viewpassword;
 
