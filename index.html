@@ -171,7 +171,7 @@
             const viewPassword = userDoc.data().viewpassword;
 
             // Check if teams exist in Firestore
-            const teamsSnapshot = await db.collection(collectionName).doc("teams").get();
+             const teamsSnapshot = await db.collection(collectionName).doc("teams").collection(collectionName).get();
 			console.log("Using collection:", collectionName);
             const teamsExist = !teamsSnapshot.empty;
 			console.log("Teams Exist", teamsExist);
