@@ -184,15 +184,13 @@
 			console.log("Using collection:", collectionName);
 			console.log("Auction type:", auctype);
 			console.log("Teams Exist", teamsExist);
-			alert("Login Successful 1.");
-                    window.location.href = auctype === 1 ? "dashboard.html" : "dashboard2.html";
+			window.location.href = auctype === 1 ? "dashboard.html" : "dashboard2.html";
                 } else {
                     // Teams not set up, go to setup page
 			console.log("Using collection:", collectionName);
 			console.log("Auction type:", auctype);
 			console.log("Teams Exist", teamsExist);
-			alert("Login Successful 2.");
-                    window.location.replace(`setup.html?collection=${collectionName}`);
+			window.location.replace(`setup.html?collection=${collectionName}`);
                 }
             } else if (password === viewPassword) {
                 if (teamsExist) {
@@ -200,17 +198,16 @@
 			console.log("Using collection:", collectionName);
 			console.log("Auction type:", auctype);
 			console.log("Teams Exist", teamsExist);
-			alert("Login Successful 3.");
-                    window.location.href = auctype === 1 ? "team_status.html" : "team_status2.html";
+			window.location.href = auctype === 1 ? "team_status.html" : "team_status2.html";
                 } else {
                     // Teams missing, show "not finalized" page
 			console.log("Using collection:", collectionName);
 			console.log("Auction type:", auctype);
 			console.log("Teams Exist", teamsExist);
-			alert("Login Successful 4.");
-                    window.location.href = "teams_not_finalized.html";
+			window.location.href = "teams_not_finalized.html";
                 }
-            } else {
+        		alert("Login Successful");    
+	    } else {
                 alert("Invalid username or password.");
             }
         } else {
