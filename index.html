@@ -172,7 +172,8 @@
 
             // Check if teams exist in Firestore
              const teamsSnapshot = await db.collection(collectionName).doc("teams").collection(collectionName).get();
-			console.log("Using collection:", collectionName);
+		console.log("Teams Snapshot:", teamsSnapshot);
+		console.log("Teams Snapshot Empty:", teamsSnapshot.empty);
             const teamsExist = !teamsSnapshot.empty;
 			console.log("Teams Exist", teamsExist);
             sessionStorage.setItem("collection", collectionName);
@@ -191,7 +192,7 @@
 			console.log("Auction type:", auctype);
 			console.log("Teams Exist", teamsExist);
 			alert("Login Successful 2.");
-                    window.location.href = `setup.html?collection=${collectionName}`;
+                    window.location.replace(`setup.html?collection=${collectionName}`);
                 }
             } else if (password === viewPassword) {
                 if (teamsExist) {
