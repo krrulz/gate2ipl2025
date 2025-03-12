@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Auction - Random Player Picker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { doc, updateDoc, getDocs, query, where,getDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlvLqFgqUqD-8WZNXKFgCh9N3qxxeknqE",
+            authDomain: "gate2iplauction.firebaseapp.com",
+            projectId: "gate2iplauction",
+            storageBucket: "gate2iplauction.appspot.com",
+            messagingSenderId: "764180207875",
+            appId: "1:764180207875:web:58ac770f6c387544a87136",
+            measurementId: "G-FH9F4KNWRY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let players = [];
+        let teams = [];
+        // Retrieve collection name from sessionStorage
+        const collectionName = sessionStorage.getItem("collection") || "defaultCollection";
+        console.log("Using collection:", collectionName);
+
+        async function fetchPlayersFromFirestore() {
+            try {
+                const querySnapshot = await getDocs(collection(db, collectionName));
+
+                if (querySnapshot.empty) {
+                    alert("No player data found in the database.");
+                    return;
+                }
+
+                players = querySnapshot.docs.map((doc) => {
+                    const data = doc.data();
+                    return {
+                        name: data.name || "Unknown",
+                        category: data.category || "Unknown",
+                        role: data.role || "Unknown",
+                        basePrice: data.basePrice ? parseFloat(data.basePrice) : 0,
+                        currentIPLTeam: data.currentIPLTeam || "",
+                        nationality: data.nationality || "Unknown",
+                        team: data.team || "",
+                        currentPrice: data.basePrice || 0 // Using basePrice as the initial currentPrice
+                    };
+                });
+
+                console.log("Fetched players:", players); // Debugging line to check player data
+                populateDropdowns();
+                populateTeamDropdown(); // New function to populate team names
+            } catch (error) {
+                console.error("Error fetching player data from Firestore:", error);
+            }
+        }
+
+        function populateDropdowns() {
+            const categoryDropdown = document.getElementById("category");
+            const roleDropdown = document.getElementById("role");
+
+            categoryDropdown.innerHTML = '<option value="">Select Category</option>';
+            roleDropdown.innerHTML = '<option value="all">All Roles</option>'; // Add "All Roles" option
+
+            const categories = [...new Set(players.map(player => player.category))];
+            const roles = [...new Set(players.map(player => player.role))];
+
+            console.log("Categories:", categories); 
+            console.log("Roles:", roles); 
+
+            categories.forEach(category => {
+                const option = document.createElement("option");
+                option.value = category;
+                option.textContent = category;
+                categoryDropdown.appendChild(option);
+            });
+
+            roles.forEach(role => {
+                const option = document.createElement("option");
+                option.value = role;
+                option.textContent = role;
+                roleDropdown.appendChild(option);
+            });
+
+            toggleRandomPlayerButton();
+        }
+
+async function populateTeamDropdown() {
+    const teamDropdown = document.getElementById("team-select");
+
+    try {
+        // Ensure collectionName is set
+        if (!collectionName) {
+            console.error("collectionName is not defined.");
+            alert("Collection name is missing.");
+            return;
+        }
+
+        // Reference to subcollection: collectionName/teams/collectionName
+        const teamsRef = collection(db, collectionName, "teams", collectionName);
+        const querySnapshot = await getDocs(teamsRef);
+
+        if (querySnapshot.empty) {
+            console.warn("No teams found in Firestore.");
+            alert("No teams found in the database.");
+            return;
+        }
+
+        // Clear dropdown and add default option
+        teamDropdown.innerHTML = '<option value="">Select Team</option>';
+
+        querySnapshot.forEach((doc) => {
+            const teamData = doc.data();
+            console.log("Team Data:", teamData); // Debugging
+
+            if (teamData.name) {
+                const option = document.createElement("option");
+                option.value = teamData.name;
+                option.textContent = teamData.name;
+                teamDropdown.appendChild(option);
+            }
+        });
+
+        // Add "UNSOLD" option at the end
+        const unsoldOption = document.createElement("option");
+        unsoldOption.value = "UNSOLD";
+        unsoldOption.textContent = "UNSOLD";
+        teamDropdown.appendChild(unsoldOption);
+
+        console.log("Teams loaded successfully.");
+    } catch (error) {
+        console.error("Error fetching teams from Firestore:", error);
+    }
+}
+
+
+        function toggleRandomPlayerButton() {
+            const selectedCategory = document.getElementById("category").value;
+            const selectedRole = document.getElementById("role").value;
+            const button = document.getElementById("random-player-button");
+
+            console.log("Selected Category:", selectedCategory); // Debugging selected category
+            console.log("Selected Role:", selectedRole); // Debugging selected role
+
+            // Enable the button only if both category and role are selected
+            if (selectedCategory && selectedRole) {
+                button.disabled = false;
+            } else {
+                button.disabled = true;
+            }
+        }
+
+async function selectRandomPlayer() {
+    try {
+        const categorySelect = document.getElementById("category");
+        const roleSelect = document.getElementById("role");
+
+        const selectedCategory = categorySelect.value;
+        const selectedRole = roleSelect.value;
+
+        // Fetch only players who have team set to null (unassigned players)
+        const playersQuery = query(collection(db, collectionName), where("team", "==", ''));
+        const playersSnapshot = await getDocs(playersQuery);
+        const unassignedPlayers = playersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Apply existing filters on unassigned players
+        const filteredPlayers = unassignedPlayers.filter(player =>
+            (selectedCategory === "" || player.category === selectedCategory) &&
+            (selectedRole === "all" || player.role === selectedRole) // Ignore role filter if "All Roles" is selected
+        );
+
+        if (filteredPlayers.length === 0) {
+            alert("No available players matching the filters.");
+            return;
+        }
+
+        // Select a random player from the filtered list
+        const randomPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)];
+
+       
+
+        // Update input fields with selected player's details
+        document.getElementById("player-name-input").value = randomPlayer.name;
+        document.getElementById("player-currentIPLTeam-input").value = randomPlayer.currentIPLTeam || "";
+        document.getElementById("player-basePrice-input").value = randomPlayer.basePrice;
+        document.getElementById("player-currentPrice-input").value = randomPlayer.currentPrice;
+
+
+    } catch (error) {
+        console.error("Error selecting random player:", error);
+        alert("Error fetching unassigned players.");
+    }
+}
+
+
+      async function assignPlayer() {
+    const teamDropdown = document.getElementById("team-select");
+    const selectedTeam = teamDropdown.value;
+    const playerName = document.getElementById("player-name-input").value;
+    const currentBidInput = document.getElementById("player-currentPrice-input");
+    const currentBid = parseFloat(currentBidInput.value);
+
+    if (!selectedTeam) {
+        alert("Please select a team.");
+        return;
+    }
+
+    try {
+        // ✅ Fetch team details from Firestore
+        const teamDocRef = doc(db, collectionName, "teams");
+        const teamDoc = await getDoc(teamDocRef);
+
+        if (!teamDoc.exists()) {
+            alert("Team data not found!");
+            return;
+        }
+
+        const teamData = teamDoc.data();
+
+        // ✅ Get max player limits
+        const maxAllRounder = teamData.maxAllRounder || 0;
+        const maxBatsman = teamData.maxBatsman || 0;
+        const maxBowler = teamData.maxBowler || 0;
+        const maxKeeper = teamData.maxKeeper || 0;
+		 const playersQuery = query(collection(db, collectionName), where("team", "==", selectedTeam));
+        const playersSnapshot = await getDocs(playersQuery);
+        const teamPlayers = playersSnapshot.docs.map(doc => doc.data());
+console.log(maxAllRounder, maxBatsman, maxBowler, maxKeeper);
+        // ✅ Count existing players in each role
+        const currentAllRounders = teamPlayers.filter(player => player.team === selectedTeam && player.role === "All-Rounder").length;
+        const currentBatsmen = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Batter").length;
+        const currentBowlers = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Bowler").length;
+        const currentKeepers = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Wicketkeeper/Batter").length;
+console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
+        // ✅ Validate based on role
+        const selectedPlayer = players.find(player => player.name === playerName);
+        if (!selectedPlayer) {
+            alert("Player not found in the list.");
+            return;
+        }
+
+        if (selectedPlayer.role === "All-Rounder" && currentAllRounders >= maxAllRounder) {
+            alert("All-rounder limit reached for this team.");
+            return;
+        }
+        if (selectedPlayer.role === "Batter" && currentBatsmen >= maxBatsman) {
+            alert("Batsman limit reached for this team.");
+            return;
+        }
+        if (selectedPlayer.role === "Bowler" && currentBowlers >= maxBowler) {
+            alert("Bowler limit reached for this team.");
+            return;
+        }
+        if (selectedPlayer.role === "Wicketkeeper/Batter" && currentKeepers >= maxKeeper) {
+            alert("Wicket-keeper limit reached for this team.");
+            return;
+        }
+
+        // ✅ Fetch player document from Firestore
+        const playerQuery = query(collection(db, collectionName), where("name", "==", playerName));
+        const querySnapshot = await getDocs(playerQuery);
+
+        if (querySnapshot.empty) {
+            alert("Player not found in Firestore.");
+            return;
+        }
+
+        const playerDoc = querySnapshot.docs[0]; // Assume first match is correct
+        const playerDocId = playerDoc.id; // Extract the Firestore document ID
+
+        // ✅ Update Firestore
+        const playerDocRef = doc(db, collectionName, playerDocId);
+        await updateDoc(playerDocRef, {
+            team: selectedTeam,
+            currentPrice: currentBid
+        });
+
+        // ✅ Add player to the team list
+        players.push(selectedPlayer);
+
+        alert(`${playerName} has been assigned to ${selectedTeam} at a price of ₹${currentBid.toFixed(2)}. Firestore is updated.`);
+
+        // **Clear the currentPrice textbox**
+        document.getElementById("player-currentPrice-input").value = "";
+
+    } catch (error) {
+        console.error("Error updating Firestore:", error);
+        alert("Error updating player in the database.");
+    }
+}
+
+
+        window.onload = function () {
+            fetchPlayersFromFirestore();
+
+            // Add the event listener to the "Assign Player" button
+            const assignButton = document.getElementById("assign-player-button");
+            if (assignButton) {
+                assignButton.addEventListener("click", assignPlayer);
+            } else {
+                console.error('Assign Player button not found!');
+            }
+
+            // Add the event listener to the "Select Random Player" button
+            const button = document.getElementById("random-player-button");
+            if (button) {
+                button.addEventListener("click", selectRandomPlayer);
+            } else {
+                console.error('Random Player button not found!');
+            }
+
+            // Attach event listeners to category and role dropdowns to track changes
+            document.getElementById("category").addEventListener("change", toggleRandomPlayerButton);
+            document.getElementById("role").addEventListener("change", toggleRandomPlayerButton);
+        };
+
+        document.getElementById("download-csv-btn").addEventListener("click", downloadUpdatedCSV);
+        document.getElementById("team-status-button").addEventListener("click", function () {
+            window.location.href = "team_status2.html"; // Redirects to Team Status page
+        });
+
+        async function downloadUpdatedCSV() {
+            console.log("Fetching latest data from Firestore..."); // Debugging
+
+            try {
+                const querySnapshot = await getDocs(collection(db, collectionName));
+                const updatedPlayers = querySnapshot.docs.map((doc) => {
+                    const data = doc.data();
+                    return {
+                        name: data.name || "Unknown",
+                        category: data.category || "Unknown",
+                        role: data.role || "Unknown",
+                        basePrice: data.basePrice ? parseFloat(data.basePrice) : 0,
+                        currentIPLTeam: data.currentIPLTeam || "",
+                        nationality: data.nationality || "Unknown",
+                        team: data.team || "",
+                        currentPrice: data.currentPrice ? parseFloat(data.currentPrice) : parseFloat(data.basePrice) // Correctly fetch currentPrice
+                    };
+                });
+
+                const csv = Papa.unparse(updatedPlayers);
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "updated_players.csv";
+                link.click();
+            } catch (error) {
+                console.error("Error downloading CSV:", error);
+            }
+        }
+    </script>
+</head>
+ 
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .icon-button {
+            position: absolute;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .download-icon {
+            top: 10px;
+            left: 10px;
+        }
+
+        .team-status-icon {
+            top: 10px;
+            right: 10px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+
+        label {
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        .form-section {
+            margin-top: 20px;
+        }
+
+        .radio-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .radio-buttons label {
+            margin-left: 10px;
+            font-size: 1em;
+        }
+    </style>
+  </head>
+
+    
+
+<body class="bg-gray-900 text-white flex justify-center items-center h-screen">
+    <button id="download-csv-btn" class="icon-button download-icon">📥</button>
+    <button id="team-status-button" class="icon-button team-status-icon">📋</button>
+
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-xl">
+        <h1 class="text-2xl font-bold text-center mb-4">   Belgium Friends - IPL Auction </h1>
+        
+        <!-- Category and Role Dropdowns -->
+        <div class="mb-4">
+            <label for="category" class="block text-sm font-medium">Category</label>
+            <select id="category" class="w-full p-2 rounded bg-gray-700 text-white"></select>
+        </div>
+        
+        <div class="mb-4">
+            <label for="role" class="block text-sm font-medium">Role</label>
+            <select id="role" class="w-full p-2 rounded bg-gray-700 text-white"></select>
+        </div>
+        
+        <button id="random-player-button" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded text-white font-semibold disabled:bg-gray-500" disabled>Select Random Player</button>
+        
+        <!-- Player Info Display -->
+        <div id="player-info" class="mt-6 p-4 bg-gray-700 rounded-lg">
+            <p><strong>Name:</strong> <input type="text" id="player-name-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
+            <p><strong>Current IPL Team:</strong> <input type="text" id="player-currentIPLTeam-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
+            <p><strong>Base Price:</strong> <input type="text" id="player-basePrice-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
+            <p><strong>Current Price:</strong> <input type="number" id="player-currentPrice-input" class="w-full p-2 bg-gray-600 rounded text-white" step="1" /></p>
+        </div>
+        
+        <!-- Team Dropdown -->
+        <div class="mt-4">
+            <label for="team-select" class="block text-sm font-medium">Select Team</label>
+            <select id="team-select" class="w-full p-2 rounded bg-gray-700 text-white"></select>
+        </div>
+        
+              
+        <!-- Assign Player Button -->
+        <button id="assign-player-button" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded text-white font-semibold mt-4">Assign Player</button>
+        
+    </div>
+</body>
+</html>

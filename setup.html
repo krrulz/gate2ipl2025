@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Auction Teams</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            max-width: 400px;
+            margin: auto;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        #teamNamesContainer {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Setup Auction Teams</h2>
+        
+        <!-- Max Player Counts -->
+        <label for="maxBatsman">Max Batsman Count:</label>
+        <input type="number" id="maxBatsman" min="0" required>
+        
+        <label for="maxAllRounder">Max All-Rounder Count:</label>
+        <input type="number" id="maxAllRounder" min="0" required>
+        
+        <label for="maxBowler">Max Bowler Count:</label>
+        <input type="number" id="maxBowler" min="0" required>
+        
+        <label for="maxKeeper">Max Keeper Count:</label>
+        <input type="number" id="maxKeeper" min="0" required>
+
+        <hr>
+
+        <label for="numTeams">Enter Number of Teams:</label>
+        <input type="number" id="numTeams" min="1" max="10" required>
+        <button onclick="generateTeamInputs()">Next</button>
+
+        <div id="teamNamesContainer"></div>
+        <button id="saveTeams" style="display: none;" onclick="saveTeams()">Save Teams</button>
+    </div>
+
+    <!-- Load Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBlvLqFgqUqD-8WZNXKFgCh9N3qxxeknqE",
+            authDomain: "gate2iplauction.firebaseapp.com",
+            projectId: "gate2iplauction",
+            storageBucket: "gate2iplauction.appspot.com",
+            messagingSenderId: "764180207875",
+            appId: "1:764180207875:web:58ac770f6c387544a87136",
+            measurementId: "G-FH9F4KNWRY"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get collection name from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const collectionName = urlParams.get("collection");
+
+        async function checkIfTeamsExist() {
+            const teamsSnapshot = await db.collection(collectionName).doc("teams").collection(collectionName).get();
+            if (!teamsSnapshot.empty) {
+                window.location.href = "dashboard2.html"; // Redirect if teams exist
+            }
+        }
+
+        checkIfTeamsExist(); // Run check on page load
+
+        function generateTeamInputs() {
+            const numTeams = document.getElementById("numTeams").value;
+            const container = document.getElementById("teamNamesContainer");
+            container.innerHTML = ""; // Clear previous entries
+
+            for (let i = 1; i <= numTeams; i++) {
+                let input = document.createElement("input");
+                input.type = "text";
+                input.placeholder = "Team " + i + " Name";
+                input.id = "team" + i;
+                container.appendChild(input);
+            }
+
+            document.getElementById("saveTeams").style.display = "block";
+        }
+
+        async function saveTeams() {
+            const numTeams = document.getElementById("numTeams").value;
+            const teamsRef = db.collection(collectionName).doc("teams").collection(collectionName);
+
+            // Save global max count values
+            const maxBatsman = parseInt(document.getElementById("maxBatsman").value) || 0;
+            const maxAllRounder = parseInt(document.getElementById("maxAllRounder").value) || 0;
+            const maxBowler = parseInt(document.getElementById("maxBowler").value) || 0;
+            const maxKeeper = parseInt(document.getElementById("maxKeeper").value) || 0;
+
+            await db.collection(collectionName).doc("teams").set({
+                maxBatsman: maxBatsman,
+                maxAllRounder: maxAllRounder,
+                maxBowler: maxBowler,
+                maxKeeper: maxKeeper
+            });
+
+            // Save teams
+            for (let i = 1; i <= numTeams; i++) {
+                let teamName = document.getElementById("team" + i).value.trim();
+                if (teamName) {
+                    await teamsRef.doc(teamName).set({ name: teamName });
+                }
+            }
+
+            alert("Teams and max player counts saved successfully!");
+            window.location.href = "dashboard2.html";
+        }
+    </script>
+
+</body>
+</html>
