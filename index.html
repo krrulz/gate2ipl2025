@@ -180,17 +180,29 @@
             if (password === correctPassword) {
                 if (teamsExist) {
                     // Auction login - Redirect based on auctype
+			console.log("Using collection:", collectionName);
+			console.log("Auction type:", auctype);
+			console.log("Teams Exist", teamsExist);
                     window.location.href = auctype === 1 ? "dashboard.html" : "dashboard2.html";
                 } else {
                     // Teams not set up, go to setup page
+			console.log("Using collection:", collectionName);
+			console.log("Auction type:", auctype);
+			console.log("Teams Exist", teamsExist);
                     window.location.href = `setup.html?collection=${collectionName}`;
                 }
             } else if (password === viewPassword) {
                 if (teamsExist) {
                     // View-only login - Redirect based on auctype
+			console.log("Using collection:", collectionName);
+			console.log("Auction type:", auctype);
+			console.log("Teams Exist", teamsExist);
                     window.location.href = auctype === 1 ? "team_status.html" : "team_status2.html";
                 } else {
                     // Teams missing, show "not finalized" page
+			console.log("Using collection:", collectionName);
+			console.log("Auction type:", auctype);
+			console.log("Teams Exist", teamsExist);
                     window.location.href = "teams_not_finalized.html";
                 }
             } else {
