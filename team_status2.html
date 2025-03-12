@@ -12,35 +12,31 @@
             background: url('https://www.dinalipi.com/wp-content/uploads/2024/10/IPL-2025.webp') no-repeat center center fixed;
             background-size: cover;
             color: white;
+            margin: 0;
             padding: 20px;
             display: flex;
-            height: 100vh;
             flex-direction: column;
             justify-content: center;
+            height: 100vh;
         }
+
         .container {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            width: 100%;
             max-width: 1200px;
-            margin: auto;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
         }
+
         .left-pane, .right-pane {
-            width: 48%;
-        }
-        .left-pane {
             background: rgba(0, 0, 0, 0.6);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .right-pane {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
+
         h1, h2 {
             color: #fff;
             background: rgba(0, 0, 0, 0.6);
@@ -49,6 +45,7 @@
             border-radius: 5px;
             font-weight: 600;
         }
+
         select {
             padding: 10px;
             font-size: 16px;
@@ -57,6 +54,7 @@
             margin-bottom: 20px;
             background-color: #fff;
         }
+
         table {
             width: 100%;
             margin: 20px 0;
@@ -67,74 +65,92 @@
             overflow: hidden;
             table-layout: fixed;
         }
+
         th, td {
             padding: 12px;
             border: 1px solid #ddd;
             text-align: center;
             color: #333;
         }
+
         th {
             background-color: #007BFF;
             color: white;
             font-weight: bold;
         }
+
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+
         tr:hover {
             background-color: #eaeaea;
         }
+
         .over-budget {
             color: red;
             font-weight: bold;
         }
+
         /* Responsive Design */
         @media (max-width: 900px) {
             .container {
-                flex-direction: column;
+                grid-template-columns: 1fr; /* Stack columns on smaller screens */
+                align-items: stretch;
             }
+
             .left-pane, .right-pane {
                 width: 100%;
+                margin-bottom: 20px;
             }
-        }
-        @media (max-width: 600px) {
+
             table {
                 overflow-x: auto;
                 display: block;
-                width: 100%;
             }
+
             th, td {
                 font-size: 14px;
-                padding: 8px;
+                padding: 10px;
             }
+
             select {
                 font-size: 14px;
             }
         }
-        /* Enhanced Design */
-        .card {
-            background: rgba(0, 0, 0, 0.7);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease-in-out;
+
+        @media (max-width: 600px) {
+            h1, h2 {
+                font-size: 16px;
+            }
+
+            select {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            th, td {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .container {
+                padding: 10px;
+            }
         }
-        .card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="left-pane card">
+        <div class="left-pane">
             <h2>Team Stats</h2>
             <table>
                 <tr><th>Number of Players</th><th>Budget Left</th><th>Batsmen</th><th>Bowler</th><th>All-Rounder</th><th>Wicketkeeper</th></tr>
                 <tr id="teamStats"></tr>
             </table>
         </div>
-        <div class="right-pane card">
+        <div class="right-pane">
             <h2>Player List</h2>
             <select id="teamSelect" onchange="loadTeamData()">
                 <option value="">Select a Team</option>
@@ -164,6 +180,7 @@
         const db = getFirestore(app);
         const collectionName = sessionStorage.getItem("collection") || "defaultCollection";
         console.log("Using collection:", collectionName);
+
         async function loadTeams() {
             const teams = new Set();
             const playersSnapshot = await getDocs(collection(db, collectionName));
