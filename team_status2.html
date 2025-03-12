@@ -15,20 +15,31 @@
             padding: 20px;
             display: flex;
             height: 100vh;
+            flex-direction: column;
+            justify-content: center;
         }
         .container {
             display: flex;
+            justify-content: space-between;
+            gap: 20px;
             width: 100%;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .left-pane, .right-pane {
+            width: 48%;
         }
         .left-pane {
-            width: 60%;
             background: rgba(0, 0, 0, 0.6);
             padding: 20px;
             border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .right-pane {
-            width: 40%;
+            background: rgba(0, 0, 0, 0.6);
             padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         h1, h2 {
             color: #fff;
@@ -36,6 +47,7 @@
             display: inline-block;
             padding: 10px 20px;
             border-radius: 5px;
+            font-weight: 600;
         }
         select {
             padding: 10px;
@@ -43,15 +55,17 @@
             border-radius: 5px;
             border: 1px solid #ccc;
             margin-bottom: 20px;
+            background-color: #fff;
         }
         table {
-            width: 90%;
-            margin: 20px auto;
+            width: 100%;
+            margin: 20px 0;
             border-collapse: collapse;
             background: rgba(255, 255, 255, 0.9);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             overflow: hidden;
+            table-layout: fixed;
         }
         th, td {
             padding: 12px;
@@ -62,36 +76,66 @@
         th {
             background-color: #007BFF;
             color: white;
+            font-weight: bold;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-        @media (max-width: 600px) {
+        tr:hover {
+            background-color: #eaeaea;
+        }
+        .over-budget {
+            color: red;
+            font-weight: bold;
+        }
+        /* Responsive Design */
+        @media (max-width: 900px) {
             .container {
                 flex-direction: column;
             }
             .left-pane, .right-pane {
                 width: 100%;
             }
+        }
+        @media (max-width: 600px) {
             table {
+                overflow-x: auto;
+                display: block;
                 width: 100%;
             }
             th, td {
                 font-size: 14px;
                 padding: 8px;
             }
+            select {
+                font-size: 14px;
+            }
+        }
+        /* Enhanced Design */
+        .card {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="left-pane">
-          <table>
-               <tr><th>Number of Players</th><th>Budget Left</th><th>Batsmen</th><th>Bowler</th><th>All-Rounder</th><th>Wicketkeeper</th></tr>
+        <div class="left-pane card">
+            <h2>Team Stats</h2>
+            <table>
+                <tr><th>Number of Players</th><th>Budget Left</th><th>Batsmen</th><th>Bowler</th><th>All-Rounder</th><th>Wicketkeeper</th></tr>
                 <tr id="teamStats"></tr>
-            </table>     
+            </table>
         </div>
-        <div class="right-pane">
+        <div class="right-pane card">
+            <h2>Player List</h2>
             <select id="teamSelect" onchange="loadTeamData()">
                 <option value="">Select a Team</option>
             </select>
@@ -140,7 +184,7 @@
 
             const playersSnapshot = await getDocs(query(collection(db, collectionName), where("team", "==", team)));
 
-            let playerCount = 0, budgetUsed = 0, AllRounder = 0, Batsman = 0,Bowler = 0,Wicketkeeper = 0;
+            let playerCount = 0, budgetUsed = 0, AllRounder = 0, Batsman = 0, Bowler = 0, Wicketkeeper = 0;
             let playerRows = "";
 
             playersSnapshot.forEach(doc => {
@@ -151,30 +195,27 @@
                 budgetUsed += playerPrice;
 
                 if (player.role === "Batter") Batsman++;
-				if (player.role === "Bowler") Bowler++;
-				if (player.role === "All-Rounder") AllRounder++;
-				if (player.role === "Wicketkeeper/Batter") Wicketkeeper++;// Case-insensitive check
-                
+                if (player.role === "Bowler") Bowler++;
+                if (player.role === "All-Rounder") AllRounder++;
+                if (player.role === "Wicketkeeper/Batter") Wicketkeeper++;
 
                 playerRows += `<tr><td>${player.name}</td><td>${player.currentPrice}</td></tr>`;
             });
 
             let totalBudget = 150;
             let budgetLeft = totalBudget - budgetUsed;
-            
 
             document.getElementById("teamStats").innerHTML = `
                 <td>${playerCount}</td>
-                <td>${budgetLeft < 0 ? "Over Budget!" : budgetLeft.toFixed(2)}</td>
+                <td class="${budgetLeft < 0 ? 'over-budget' : ''}">${budgetLeft < 0 ? "Over Budget!" : budgetLeft.toFixed(2)}</td>
                 <td>${Batsman}</td>
-				<td>${Bowler}</td>
-				<td>${AllRounder}</td>
+                <td>${Bowler}</td>
+                <td>${AllRounder}</td>
                 <td>${Wicketkeeper}</td>
             `;
-            document.getElementById("playerList").innerHTML = playerRows;
+            document.getElementById("playerList").innerHTML = playerRows || "<tr><td colspan='2'>No players available</td></tr>";
         }
 
-        // Attach functions to window to make them accessible globally
         window.loadTeamData = loadTeamData;
 
         loadTeams();
