@@ -336,6 +336,7 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
                 const updatedPlayers = querySnapshot.docs.map((doc) => {
                     const data = doc.data();
                     return {
+			 playerID: data.playerID || "",   
                         name: data.name || "Unknown",
                         category: data.category || "Unknown",
                         role: data.role || "Unknown",
