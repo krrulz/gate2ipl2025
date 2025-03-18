@@ -330,7 +330,8 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
 
         // **Clear the currentPrice textbox**
         document.getElementById("player-currentPrice-input").value = "";
-
+	        // **Refresh the role count table**
+        populateRoleCountTable();
     } catch (error) {
         console.error("Error updating Firestore:", error);
         alert("Error updating player in the database.");
