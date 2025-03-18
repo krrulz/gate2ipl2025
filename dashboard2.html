@@ -90,6 +90,7 @@
                 option.textContent = role;
                 roleDropdown.appendChild(option);
             });
+document.getElementById("category").addEventListener("change", populateRoleCountTable);
 
             toggleRandomPlayerButton();
         }
@@ -158,6 +159,44 @@ async function populateTeamDropdown() {
                 button.disabled = true;
             }
         }
+async function populateRoleCountTable() {
+    const roleCountTable = document.getElementById("role-count-table");
+    const selectedCategory = document.getElementById("category").value; // Get the selected category
+
+    try {
+        // Fetch unassigned players
+        const querySnapshot = await getDocs(query(collection(db, collectionName), where("team", "==", '')));
+        const unassignedPlayers = querySnapshot.docs.map(doc => doc.data());
+
+        // Filter players by selected category (if any)
+        const filteredPlayers = unassignedPlayers.filter(player => {
+            // If a category is selected, filter by category
+            return selectedCategory === "" || player.category === selectedCategory;
+        });
+
+        // Count players per role
+        const roleCounts = {};
+        filteredPlayers.forEach(player => {
+            const role = player.role || "Unknown";
+            roleCounts[role] = (roleCounts[role] || 0) + 1;
+        });
+
+        // Clear the table body first
+        roleCountTable.innerHTML = '';
+
+        // Populate the table rows
+        Object.keys(roleCounts).forEach(role => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td class="px-4 py-2 bg-gray-800 text-white">${role}</td>
+                <td class="px-4 py-2 bg-gray-800 text-white">${roleCounts[role]}</td>
+            `;
+            roleCountTable.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Error fetching available players for roles:", error);
+    }
+}
 
 async function selectRandomPlayer() {
     try {
@@ -429,6 +468,40 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
             margin-left: 10px;
             font-size: 1em;
         }
+		 /* Styling the table */
+    #role-count-table {
+        width: 100%;
+        border-collapse: collapse; /* Collapses borders into a single line */
+    }
+
+    /* Styling table headers and cells */
+    #role-count-table th,
+    #role-count-table td {
+        border: 1px solid #2d3748; /* Add a border to each cell */
+        padding: 8px;
+        text-align: left;
+        color: #fff;
+    }
+
+    /* Center-align the values in the second column */
+    #role-count-table td:nth-child(2) {
+        text-align: center;
+    }
+
+    /* Styling header row */
+    #role-count-table th {
+        background-color: #2d3748; /* Dark background for header */
+        color: #fff;
+    }
+
+    /* Styling alternate rows for better readability */
+    #role-count-table tr:nth-child(even) {
+        background-color: #1a202c;
+    }
+
+    #role-count-table tr:nth-child(odd) {
+        background-color: #2d3748;
+    }
     </style>
   </head>
 
@@ -451,7 +524,22 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
             <label for="role" class="block text-sm font-medium">Role</label>
             <select id="role" class="w-full p-2 rounded bg-gray-700 text-white"></select>
         </div>
-        
+        <!-- Add this below the existing dropdowns -->
+<div class="mt-4">
+    <h2 class="text-lg font-bold">Available Players per Role</h2>
+    <table class="w-full table-auto text-sm mt-2">
+        <thead>
+            <tr>
+                <th class="px-4 py-2 bg-gray-700 text-white">Role</th>
+                <th class="px-4 py-2 bg-gray-700 text-white">Available Players</th>
+            </tr>
+        </thead>
+        <tbody id="role-count-table">
+            <!-- Dynamic rows will be populated here -->
+        </tbody>
+    </table>
+</div>
+
         <button id="random-player-button" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded text-white font-semibold disabled:bg-gray-500" disabled>Select Random Player</button>
         
         <!-- Player Info Display -->
