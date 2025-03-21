@@ -289,6 +289,10 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
             alert("Player not found in the list.");
             return;
         }
+	    if(currentBid.empty || currentBid ==0){
+		    alert("Current Bid cannot be empty");
+            return;
+	    }
 		if (totalcount >= 13)
 		{
 		alert("Total Players limit reached for this team.");
@@ -323,7 +327,7 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
 
         const playerDoc = querySnapshot.docs[0]; // Assume first match is correct
         const playerDocId = playerDoc.id; // Extract the Firestore document ID
-		if(currentBid !=0){
+		
         // ✅ Update Firestore
         const playerDocRef = doc(db, collectionName, playerDocId);
         await updateDoc(playerDocRef, {
@@ -336,10 +340,7 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
 
         alert(`${playerName} has been assigned to ${selectedTeam} at a price of ₹${currentBid.toFixed(2)}. Firestore is updated.`);
 		}
-		else{
-		alert("Current Bid cannot be empty");
-            return;
-			}
+		
         // **Clear the currentPrice textbox**
         document.getElementById("player-currentPrice-input").value = "";
 	        // **Refresh the role count table**
