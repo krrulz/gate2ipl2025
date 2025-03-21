@@ -289,10 +289,10 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
             alert("Player not found in the list.");
             return;
         }
-	    if(currentBid.empty || currentBid ==0){
-		    alert("Current Bid cannot be empty");
-            return;
-	    }
+	   if (isNaN(currentBid)) {
+        alert("Please set a valid current bid.");
+        return;
+    }
 		if (totalcount >= 13)
 		{
 		alert("Total Players limit reached for this team.");
