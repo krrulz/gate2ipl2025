@@ -242,7 +242,7 @@ async function selectRandomPlayer() {
 }
 
 
- async function assignPlayer() {
+      async function assignPlayer() {
     const teamDropdown = document.getElementById("team-select");
     const selectedTeam = teamDropdown.value;
     const playerName = document.getElementById("player-name-input").value;
@@ -254,14 +254,9 @@ async function selectRandomPlayer() {
         return;
     }
 
-    if (isNaN(currentBid)) {
-        alert("Please set a valid current bid.");
-        return;
-    }
-
     try {
         // ✅ Fetch team details from Firestore
-        const teamDocRef = doc(db, collectionName, "teams", collectionName, selectedTeam);
+        const teamDocRef = doc(db, collectionName, "teams");
         const teamDoc = await getDoc(teamDocRef);
 
         if (!teamDoc.exists()) {
@@ -276,31 +271,30 @@ async function selectRandomPlayer() {
         const maxBatsman = teamData.maxBatsman || 0;
         const maxBowler = teamData.maxBowler || 0;
         const maxKeeper = teamData.maxKeeper || 0;
-
-        // ✅ Fetch players already assigned to the team
-        const playersQuery = query(collection(db, collectionName), where("team", "==", selectedTeam));
+		
+		 const playersQuery = query(collection(db, collectionName), where("team", "==", selectedTeam));
         const playersSnapshot = await getDocs(playersQuery);
         const teamPlayers = playersSnapshot.docs.map(doc => doc.data());
-
+console.log(maxAllRounder, maxBatsman, maxBowler, maxKeeper);
         // ✅ Count existing players in each role
-        const currentAllRounders = teamPlayers.filter(player => player.role === "All-Rounder").length;
-        const currentBatsmen = teamPlayers.filter(player => player.role === "Batter").length;
-        const currentBowlers = teamPlayers.filter(player => player.role === "Bowler").length;
-        const currentKeepers = teamPlayers.filter(player => player.role === "Wicketkeeper/Batter").length;
-        const totalPlayersAssigned = teamPlayers.length;
-
-        // ✅ Validate based on role limits
+        const currentAllRounders = teamPlayers.filter(player => player.team === selectedTeam && player.role === "All-Rounder").length;
+        const currentBatsmen = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Batter").length;
+        const currentBowlers = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Bowler").length;
+        const currentKeepers = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Wicketkeeper/Batter").length;
+		const totalcount = currentAllRounders+ currentBatsmen+currentBowlers+currentKeepers;
+console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
+        // ✅ Validate based on role
         const selectedPlayer = players.find(player => player.name === playerName);
         if (!selectedPlayer) {
             alert("Player not found in the list.");
             return;
         }
-
-        if (totalPlayersAssigned >= 14) {
-            alert("Total player limit (14) reached for this team.");
-            return;
-        }
-
+		if (totalcount >= 14)
+		{
+		alert("Total Players limit reached for this team.");
+		return;
+		}
+		
         if (selectedPlayer.role === "All-Rounder" && currentAllRounders >= maxAllRounder) {
             alert("All-rounder limit reached for this team.");
             return;
@@ -318,16 +312,6 @@ async function selectRandomPlayer() {
             return;
         }
 
-        // ✅ Budget Validation
-        const teamBudget = teamData.budget || 0; // Team's total budget
-        const remainingBudget = teamBudget - currentBid; // Budget after assigning this player
-        const minBudgetRequired = (14 - (totalPlayersAssigned + 1)) * 1; // Minimum budget for remaining players
-
-        if (remainingBudget < minBudgetRequired) {
-            alert(`Cannot assign player. Team budget is insufficient to meet the minimum requirement of 14 players.`);
-            return;
-        }
-
         // ✅ Fetch player document from Firestore
         const playerQuery = query(collection(db, collectionName), where("name", "==", playerName));
         const querySnapshot = await getDocs(playerQuery);
@@ -339,25 +323,26 @@ async function selectRandomPlayer() {
 
         const playerDoc = querySnapshot.docs[0]; // Assume first match is correct
         const playerDocId = playerDoc.id; // Extract the Firestore document ID
-
-        // ✅ Update Firestore with player assignment
-        await updateDoc(doc(db, collectionName, playerDocId), {
+		if(currentBid !=0){
+        // ✅ Update Firestore
+        const playerDocRef = doc(db, collectionName, playerDocId);
+        await updateDoc(playerDocRef, {
             team: selectedTeam,
             currentPrice: currentBid
         });
 
-        // ✅ Update team's budget and playersAssigned count in Firestore
-        await updateDoc(teamDocRef, {
-            budget: remainingBudget,
-            playersAssigned: totalPlayersAssigned + 1
-        });
+        // ✅ Add player to the team list
+        players.push(selectedPlayer);
 
-        alert(`${playerName} has been assigned to ${selectedTeam} at a price of ₹${currentBid.toFixed(2)}.`);
-
-        // ✅ Clear the currentPrice textbox
+        alert(`${playerName} has been assigned to ${selectedTeam} at a price of ₹${currentBid.toFixed(2)}. Firestore is updated.`);
+		}
+		else{
+		alert("Current Bid cannot be empty");
+            return;
+			}
+        // **Clear the currentPrice textbox**
         document.getElementById("player-currentPrice-input").value = "";
-
-        // ✅ Refresh the role count table
+	        // **Refresh the role count table**
         populateRoleCountTable();
     } catch (error) {
         console.error("Error updating Firestore:", error);
