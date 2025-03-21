@@ -228,6 +228,7 @@ async function selectRandomPlayer() {
        
 
         // Update input fields with selected player's details
+		document.getElementById("player-role-input").value = randomPlayer.role;
         document.getElementById("player-name-input").value = randomPlayer.name;
         document.getElementById("player-currentIPLTeam-input").value = randomPlayer.currentIPLTeam || "";
         document.getElementById("player-basePrice-input").value = randomPlayer.basePrice;
@@ -270,6 +271,7 @@ async function selectRandomPlayer() {
         const maxBatsman = teamData.maxBatsman || 0;
         const maxBowler = teamData.maxBowler || 0;
         const maxKeeper = teamData.maxKeeper || 0;
+		
 		 const playersQuery = query(collection(db, collectionName), where("team", "==", selectedTeam));
         const playersSnapshot = await getDocs(playersQuery);
         const teamPlayers = playersSnapshot.docs.map(doc => doc.data());
@@ -279,6 +281,7 @@ console.log(maxAllRounder, maxBatsman, maxBowler, maxKeeper);
         const currentBatsmen = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Batter").length;
         const currentBowlers = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Bowler").length;
         const currentKeepers = teamPlayers.filter(player => player.team === selectedTeam && player.role === "Wicketkeeper/Batter").length;
+		const totalcount = currentAllRounders+ currentBatsmen+currentBowlers+currentKeepers;
 console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
         // ✅ Validate based on role
         const selectedPlayer = players.find(player => player.name === playerName);
@@ -286,7 +289,12 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
             alert("Player not found in the list.");
             return;
         }
-
+		if (totalcount >= 13)
+		{
+		alert("Total Players limit reached for this team.");
+		return;
+		}
+		
         if (selectedPlayer.role === "All-Rounder" && currentAllRounders >= maxAllRounder) {
             alert("All-rounder limit reached for this team.");
             return;
@@ -315,7 +323,7 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
 
         const playerDoc = querySnapshot.docs[0]; // Assume first match is correct
         const playerDocId = playerDoc.id; // Extract the Firestore document ID
-
+		if(currentBid !=0){
         // ✅ Update Firestore
         const playerDocRef = doc(db, collectionName, playerDocId);
         await updateDoc(playerDocRef, {
@@ -327,7 +335,11 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
         players.push(selectedPlayer);
 
         alert(`${playerName} has been assigned to ${selectedTeam} at a price of ₹${currentBid.toFixed(2)}. Firestore is updated.`);
-
+		}
+		else{
+		alert("Current Bid cannot be empty");
+            return;
+			}
         // **Clear the currentPrice textbox**
         document.getElementById("player-currentPrice-input").value = "";
 	        // **Refresh the role count table**
@@ -547,7 +559,8 @@ console.log(currentAllRounders, currentBatsmen, currentBowlers, currentKeepers);
         <div id="player-info" class="mt-6 p-4 bg-gray-700 rounded-lg">
             <p><strong>Name:</strong> <input type="text" id="player-name-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
             <p><strong>Current IPL Team:</strong> <input type="text" id="player-currentIPLTeam-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
-            <p><strong>Base Price:</strong> <input type="text" id="player-basePrice-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
+            <p><strong>Role:</strong> <input type="text" id="player-role-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
+		<p><strong>Base Price:</strong> <input type="text" id="player-basePrice-input" class="w-full p-2 bg-gray-600 rounded text-white" readonly /></p>
             <p><strong>Current Price:</strong> <input type="number" id="player-currentPrice-input" class="w-full p-2 bg-gray-600 rounded text-white" step="1" /></p>
         </div>
         
